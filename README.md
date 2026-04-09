@@ -166,6 +166,17 @@ npm run icons:extension
 
 ---
 
+## Privacy Policy
+
+JSON Prompter does not collect, transmit, or share any personal data.
+
+- All JSON history is stored locally on your device (`chrome.storage.local` in the extension, `electron-store` on desktop).
+- No analytics, telemetry, or tracking of any kind.
+- No network requests are made by this extension.
+- Your data never leaves your device.
+
+---
+
 ## License
 
 MIT
