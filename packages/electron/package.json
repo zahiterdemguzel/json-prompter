@@ -6,9 +6,10 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "prebuild:mac": "node build.js",
-    "prebuild:win": "node build.js",
-    "prebuild": "node build.js",
+    "icons": "node generate-icon.js",
+    "prebuild:mac": "node build.js && node generate-icon.js",
+    "prebuild:win": "node build.js && node generate-icon.js",
+    "prebuild": "node build.js && node generate-icon.js",
     "build:mac": "electron-builder --mac",
     "build:win": "electron-builder --win",
     "build": "electron-builder --mac --win"

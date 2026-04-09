@@ -31,6 +31,9 @@ let savedHwnd = null; // HWND of the window that had focus before we appeared
 
 function createWindow() {
   const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
+  const logoPath = app.isPackaged
+    ? path.join(__dirname, "../shared/resources/logo.png")
+    : path.join(__dirname, "../../shared/resources/logo.png");
 
   mainWindow = new BrowserWindow({
     width: 520,
@@ -43,6 +46,7 @@ function createWindow() {
     skipTaskbar: true,
     alwaysOnTop: true,
     show: false,
+    icon: logoPath,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -125,9 +129,10 @@ function registerHotkeys() {
 // ── Tray ──
 
 function createTray() {
-  const icon = nativeImage.createFromDataURL(
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVQ4T2NkoBAwUqifYdAb8P/fn/9MDIwMjIyMDIwszIxMzEyM//78+f/v7z8GBgYGBkZGJkZGJiYGZmYmRiZmZkYmJiYGRkYGBiYmJkYGRkYGJiYmRkZGBgYmJiZGBgaG/6AMRBYXM5BswGBzARkG4FMzmA0g2wB8BpA7GoZOPCAWAwAqLy0R4g1O2AAAAABJRU5ErkJggg=="
-  );
+  const logoPath = app.isPackaged
+    ? path.join(__dirname, "../shared/resources/logo.png")
+    : path.join(__dirname, "../../shared/resources/logo.png");
+  const icon = nativeImage.createFromPath(logoPath).resize({ width: 16, height: 16 });
   tray = new Tray(icon);
   tray.setToolTip("JSON Prompter — Ctrl+Shift+J");
   tray.setContextMenu(

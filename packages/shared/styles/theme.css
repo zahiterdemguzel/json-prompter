@@ -87,11 +87,10 @@ html, body {
   gap: 7px;
 }
 
-.titlebar h1 .dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-glow);
+.titlebar h1 .logo-img {
+  width: 18px; height: 18px;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
 .titlebar-actions {
