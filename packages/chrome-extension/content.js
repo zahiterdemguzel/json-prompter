@@ -48,6 +48,19 @@ let rafId = null;
 
 const BTN_SIZE = 28;
 const BTN_GAP = 6;
+const PLACEMENT_KEY = "json-prompter-btn-placement";
+let btnPlacement = "top-left";
+
+chrome.storage.local.get(PLACEMENT_KEY, (result) => {
+  if (result[PLACEMENT_KEY]) btnPlacement = result[PLACEMENT_KEY];
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes[PLACEMENT_KEY]) {
+    btnPlacement = changes[PLACEMENT_KEY].newValue;
+    if (trackedEl) positionButton(trackedEl);
+  }
+});
 
 function createFloatingButton() {
   const btn = document.createElement("button");
@@ -102,8 +115,25 @@ function positionButton(el) {
   const rect = el.getBoundingClientRect();
   if (rect.width === 0 && rect.height === 0) return;
 
-  floatingBtn.style.left = (rect.left + BTN_GAP) + "px";
-  floatingBtn.style.top = (rect.top + BTN_GAP) + "px";
+  const S = BTN_SIZE, G = BTN_GAP;
+  const cx = rect.left + rect.width / 2 - S / 2;
+  const cy = rect.top + rect.height / 2 - S / 2;
+  let left, top;
+
+  switch (btnPlacement) {
+    case "top-left":    left = rect.left - S - G;  top = rect.top - S - G;   break;
+    case "top":         left = cx;                  top = rect.top - S - G;   break;
+    case "top-right":   left = rect.right + G;      top = rect.top - S - G;   break;
+    case "left":        left = rect.left - S - G;   top = cy;                 break;
+    case "right":       left = rect.right + G;      top = cy;                 break;
+    case "bottom-left": left = rect.left - S - G;   top = rect.bottom + G;    break;
+    case "bottom":      left = cx;                  top = rect.bottom + G;    break;
+    case "bottom-right":left = rect.right + G;      top = rect.bottom + G;    break;
+    default:            left = rect.left - S - G;   top = rect.top - S - G;   break;
+  }
+
+  floatingBtn.style.left = left + "px";
+  floatingBtn.style.top = top + "px";
 }
 
 function startTrackingLoop() {

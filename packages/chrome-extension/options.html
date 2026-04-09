@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>JSON Prompter — Settings</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #13131a;
+      color: #e5e5f0;
+      padding: 28px 24px;
+      min-width: 280px;
+    }
+
+    h1 {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #55556a;
+      margin-bottom: 24px;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #c5c5e0;
+      margin-bottom: 14px;
+    }
+
+    /* 3×3 grid */
+    .placement-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 40px);
+      grid-template-rows: repeat(3, 40px);
+      gap: 5px;
+      width: fit-content;
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid transparent;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .cell:hover {
+      background: rgba(99,102,241,0.18);
+      border-color: rgba(99,102,241,0.35);
+    }
+    .cell.active {
+      background: rgba(99,102,241,0.30);
+      border-color: #6366f1;
+    }
+    .cell.center {
+      cursor: default;
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.12);
+      border-radius: 5px;
+    }
+    .cell.center:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #55556a;
+      transition: background 0.12s;
+    }
+    .cell.active .dot {
+      background: #a5b4fc;
+    }
+
+    .sel-label {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #55556a;
+    }
+    .sel-label span {
+      color: #a5b4fc;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <h1>JSON Prompter Settings</h1>
+  <div class="section-label">Shortcut Button Placement</div>
+  <div class="placement-grid" id="grid"></div>
+  <div class="sel-label">Placement: <span id="sel-text">Top-left corner</span></div>
+
+  <script src="options.js"></script>
+</body>
+</html>
