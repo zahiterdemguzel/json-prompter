@@ -102,22 +102,8 @@ function positionButton(el) {
   const rect = el.getBoundingClientRect();
   if (rect.width === 0 && rect.height === 0) return;
 
-  const centerY = rect.top + rect.height / 2 - BTN_SIZE / 2;
-  const leftOutside = rect.left - BTN_SIZE - BTN_GAP;
-
-  let left, top;
-  if (leftOutside >= 4) {
-    // Enough room to the left — sit beside the field, vertically centred
-    left = leftOutside;
-    top = Math.max(4, Math.min(centerY, window.innerHeight - BTN_SIZE - 4));
-  } else {
-    // Not enough room — sit inside the field at the top-left corner
-    left = rect.left + 6;
-    top = rect.top + 6;
-  }
-
-  floatingBtn.style.left = left + "px";
-  floatingBtn.style.top = top + "px";
+  floatingBtn.style.left = (rect.left + BTN_GAP) + "px";
+  floatingBtn.style.top = (rect.top + BTN_GAP) + "px";
 }
 
 function startTrackingLoop() {
