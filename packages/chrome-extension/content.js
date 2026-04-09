@@ -44,7 +44,7 @@ function isAiSite() {
 let floatingBtn = null;
 let trackedEl = null;
 let hideTimer = null;
-let scrollParents = [];
+let rafId = null;
 
 const BTN_SIZE = 28;
 const BTN_GAP = 6;
@@ -120,6 +120,21 @@ function positionButton(el) {
   floatingBtn.style.top = top + "px";
 }
 
+function startTrackingLoop() {
+  function loop() {
+    if (trackedEl) positionButton(trackedEl);
+    rafId = requestAnimationFrame(loop);
+  }
+  if (!rafId) rafId = requestAnimationFrame(loop);
+}
+
+function stopTrackingLoop() {
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+}
+
 function showButton(el) {
   clearTimeout(hideTimer);
   if (!floatingBtn) floatingBtn = createFloatingButton();
@@ -130,11 +145,11 @@ function showButton(el) {
     floatingBtn.style.opacity = "1";
     floatingBtn.style.transform = "scale(1)";
   });
-  attachScrollListeners(el);
+  startTrackingLoop();
 }
 
 function hideButton(immediate = false) {
-  detachScrollListeners();
+  stopTrackingLoop();
   trackedEl = null;
   if (!floatingBtn) return;
   const doHide = () => {
@@ -150,34 +165,6 @@ function hideButton(immediate = false) {
     // Small delay so a click on the button registers before it disappears
     hideTimer = setTimeout(doHide, 120);
   }
-}
-
-// Reposition on scroll of any ancestor
-function onScroll() {
-  if (trackedEl) positionButton(trackedEl);
-}
-
-function getScrollParents(el) {
-  const parents = [window];
-  let node = el.parentElement;
-  while (node && node !== document.documentElement) {
-    const { overflow, overflowY } = getComputedStyle(node);
-    if (/auto|scroll/.test(overflow + overflowY)) parents.push(node);
-    node = node.parentElement;
-  }
-  return parents;
-}
-
-function attachScrollListeners(el) {
-  scrollParents = getScrollParents(el);
-  scrollParents.forEach((p) => p.addEventListener("scroll", onScroll, { passive: true }));
-  window.addEventListener("resize", onScroll, { passive: true });
-}
-
-function detachScrollListeners() {
-  scrollParents.forEach((p) => p.removeEventListener("scroll", onScroll));
-  window.removeEventListener("resize", onScroll);
-  scrollParents = [];
 }
 
 // --- Focus tracking ---
