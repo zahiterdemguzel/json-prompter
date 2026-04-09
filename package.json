@@ -12,6 +12,7 @@
     "build:electron:mac": "npm run build:mac -w packages/electron",
     "build:electron:win": "npm run build:win -w packages/electron",
     "build:extension":   "node packages/chrome-extension/build.js",
+    "package:extension": "node packages/chrome-extension/build.js --zip",
     "icons:extension":   "node packages/chrome-extension/generate-icons.js"
   }
 }
