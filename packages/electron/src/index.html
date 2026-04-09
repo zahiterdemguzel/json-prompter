@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Prompter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../shared/styles/theme.css" />
+  <style>
+    /* Electron-specific: transparent window with floating card appearance */
+    html, body {
+      background: transparent;
+    }
+
+    #app {
+      width: 500px;
+      height: 560px;
+      border-radius: 14px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55), 0 0 0 1px var(--border);
+      animation: popIn 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.92) translateY(8px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Make titlebar draggable so the user can reposition the window */
+    .titlebar {
+      -webkit-app-region: drag;
+    }
+
+    /* Buttons inside the titlebar must opt out of dragging */
+    .titlebar-actions {
+      -webkit-app-region: no-drag;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="titlebar">
+    <h1><span class="dot"></span>JSON Prompter</h1>
+    <div class="titlebar-actions">
+      <button id="closeBtn" title="Close (Esc)">✕</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="builder">Builder</button>
+    <button class="tab" data-tab="history">History</button>
+  </div>
+
+  <div class="content">
+    <div class="panel active" data-panel="builder">
+      <div class="rows-container" id="rows"></div>
+      <div class="add-row">
+        <button class="add-btn" id="addBtn">
+          ＋ Add field <span style="color:var(--text-muted); font-size:10px; margin-left:4px;">Tab ↹</span>
+        </button>
+      </div>
+      <div class="preview-strip">
+        <div class="preview-code" id="preview">{ }</div>
+      </div>
+      <div class="action-bar">
+        <button class="action-btn" id="copyBtn">
+          <span class="icon">⎘</span> Copy
+        </button>
+        <button class="action-btn primary" id="pasteBtn">
+          <span class="icon">⎋</span> Paste &amp; Close
+        </button>
+      </div>
+    </div>
+
+    <div class="panel" data-panel="history">
+      <div class="history-list" id="historyList"></div>
+      <div class="history-actions">
+        <button class="action-btn" id="clearHistoryBtn" style="width:100%">Clear History</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  // Close button uses window.api directly since app.js is a module (deferred)
+  document.getElementById("closeBtn").addEventListener("click", () => window.api.hideWindow());
+</script>
+<script type="module" src="../../shared/js/app.js"></script>
+</body>
+</html>
