@@ -1,0 +1,68 @@
+/*
+ * glass.css — macOS Liquid Glass overrides
+ * All rules are scoped under .platform-darwin so they have zero effect on Windows or the
+ * Chrome extension (which never loads this file).
+ */
+
+/* ── Dark mode variable overrides ── */
+.platform-darwin {
+  --bg:       rgba(14,  15,  19,  0.55);
+  --bg-card:  rgba(22,  23,  29,  0.45);
+  --bg-input: rgba(28,  29,  37,  0.50);
+  --bg-hover: rgba(34,  35,  45,  0.55);
+  --border:   rgba(255, 255, 255, 0.08);
+}
+
+/* ── Light mode variable overrides ── */
+@media (prefers-color-scheme: light) {
+  .platform-darwin {
+    --bg:       rgba(244, 244, 248, 0.50);
+    --bg-card:  rgba(255, 255, 255, 0.40);
+    --bg-input: rgba(235, 235, 242, 0.45);
+    --bg-hover: rgba(226, 226, 236, 0.50);
+    --border:   rgba(0,   0,   0,   0.08);
+  }
+}
+
+/* ── Layered frosted-glass on structural sections ── */
+/* These sit on top of the already-vibrancy-blurred window background,
+   creating a "frosted within frosted" depth effect. */
+
+.platform-darwin .titlebar {
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.platform-darwin .tabs {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.platform-darwin .preview-strip {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+}
+
+.platform-darwin .action-bar {
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+}
+
+/* ── Scrollbar — semi-transparent for glass feel ── */
+.platform-darwin ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+@media (prefers-color-scheme: light) {
+  .platform-darwin ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+  }
+}

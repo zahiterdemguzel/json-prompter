@@ -10,4 +10,5 @@ contextBridge.exposeInMainWorld("api", {
   hideWindow:   ()     => ipcRenderer.invoke("hide-window"),
   onWindowShown:(cb)   => ipcRenderer.on("window-shown", cb),
   isExtension: false,
+  platform: process.platform,
 });

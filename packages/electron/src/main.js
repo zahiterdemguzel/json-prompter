@@ -32,7 +32,7 @@ let savedHwnd = null; // HWND of the window that had focus before we appeared
 function createWindow() {
   const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
 
-  mainWindow = new BrowserWindow({
+  const windowOptions = {
     width: 520,
     height: 580,
     x: Math.round(screenW / 2 - 260),
@@ -48,7 +48,16 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
-  });
+  };
+
+  if (process.platform === "darwin") {
+    // Liquid Glass: native macOS vibrancy for desktop-through blur
+    windowOptions.vibrancy = "under-window";
+    windowOptions.visualEffectState = "active";
+    windowOptions.backgroundColor = "#00000000";
+  }
+
+  mainWindow = new BrowserWindow(windowOptions);
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
 

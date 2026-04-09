@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../shared/styles/theme.css" />
+  <link rel="stylesheet" href="glass.css" />
+  <script>
+    // Set platform class before CSS renders to avoid flash of un-glassed content
+    if (navigator.platform.startsWith('Mac')) {
+      document.documentElement.classList.add('platform-darwin');
+    }
+  </script>
   <style>
     /* Electron-specific: transparent window with floating card appearance */
     html, body {
@@ -25,6 +32,23 @@
     @media (prefers-color-scheme: light) {
       #app {
         box-shadow: 0 12px 48px rgba(0,0,0,0.18), 0 0 0 1px var(--border);
+      }
+    }
+
+    /* macOS Liquid Glass: light-edge shimmer on the app container */
+    .platform-darwin #app {
+      box-shadow:
+        0 24px 80px rgba(0, 0, 0, 0.35),
+        0 0 0 0.5px rgba(255, 255, 255, 0.18),
+        inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+    }
+
+    @media (prefers-color-scheme: light) {
+      .platform-darwin #app {
+        box-shadow:
+          0 12px 48px rgba(0, 0, 0, 0.12),
+          0 0 0 0.5px rgba(255, 255, 255, 0.5),
+          inset 0 0 0 0.5px rgba(255, 255, 255, 0.25);
       }
     }
 
