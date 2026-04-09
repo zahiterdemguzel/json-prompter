@@ -1,7 +1,7 @@
 // Tracks the last focused editable element on the page.
 // When the popup sends a "paste" message, inserts the JSON at the cursor position.
 
-// Known generative AI sites — shortcut hint is shown when focused on a prompt field here.
+// Known generative AI sites — floating button is shown when a prompt field is focused.
 const AI_HOSTNAMES = [
   "chat.openai.com", "chatgpt.com",
   "claude.ai",
@@ -39,54 +39,145 @@ function isAiSite() {
   return AI_HOSTNAMES.some((h) => host === h || host.endsWith("." + h));
 }
 
-// --- Shortcut hint badge ---
+// --- Floating button ---
 
-let hintEl = null;
-let hideHintTimer = null;
+let floatingBtn = null;
+let trackedEl = null;
+let hideTimer = null;
+let scrollParents = [];
 
-function createHint() {
-  const el = document.createElement("div");
-  el.id = "__json-prompter-hint__";
-  el.textContent = "Ctrl × 2  →  JSON Prompter";
-  Object.assign(el.style, {
+const BTN_SIZE = 28;
+const BTN_GAP = 6;
+
+function createFloatingButton() {
+  const btn = document.createElement("button");
+  btn.id = "__json-prompter-btn__";
+  btn.title = "Open JSON Prompter  (Ctrl × 2)";
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3.5 2C2.67 2 2 2.67 2 3.5v2c0 .55-.45 1-1 1H.5a.5.5 0 0 0 0 1H1c.55 0 1 .45 1 1v2c0 .83.67 1.5 1.5 1.5H4a.5.5 0 0 0 0-1h-.5A.5.5 0 0 1 3 10.5v-2C3 7.67 2.4 7.1 1.62 7 2.4 6.9 3 6.33 3 5.5v-2a.5.5 0 0 1 .5-.5H4a.5.5 0 0 0 0-1H3.5ZM11.5 2H11a.5.5 0 0 0 0 1h.5a.5.5 0 0 1 .5.5v2c0 .83.6 1.4 1.38 1.5-.78.1-1.38.67-1.38 1.5v2a.5.5 0 0 1-.5.5H11a.5.5 0 0 0 0 1h.5c.83 0 1.5-.67 1.5-1.5v-2c0-.55.45-1 1-1h.5a.5.5 0 0 0 0-1H14c-.55 0-1-.45-1-1v-2C13 2.67 12.33 2 11.5 2Z" fill="currentColor"/>
+  </svg>`;
+
+  Object.assign(btn.style, {
     position: "fixed",
     zIndex: "2147483647",
-    bottom: "16px",
-    right: "16px",
-    padding: "5px 10px",
-    borderRadius: "6px",
-    fontSize: "12px",
-    fontFamily: "system-ui, sans-serif",
-    fontWeight: "500",
+    width: BTN_SIZE + "px",
+    height: BTN_SIZE + "px",
+    padding: "0",
+    border: "none",
+    borderRadius: "7px",
+    background: "rgba(30,30,40,0.82)",
+    backdropFilter: "blur(8px)",
     color: "#fff",
-    background: "rgba(30,30,40,0.88)",
-    backdropFilter: "blur(6px)",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.35)",
-    pointerEvents: "none",
-    userSelect: "none",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 1px 6px rgba(0,0,0,0.4)",
     opacity: "0",
-    transition: "opacity 0.15s ease",
+    transition: "opacity 0.15s ease, transform 0.15s ease, background 0.1s",
+    transform: "scale(0.85)",
+    pointerEvents: "none",
   });
-  document.documentElement.appendChild(el);
-  return el;
+
+  btn.addEventListener("mouseenter", () => {
+    btn.style.background = "rgba(99,102,241,0.92)";
+  });
+  btn.addEventListener("mouseleave", () => {
+    btn.style.background = "rgba(30,30,40,0.82)";
+  });
+  btn.addEventListener("mousedown", (e) => {
+    // Prevent the textarea from losing focus before we open the popup
+    e.preventDefault();
+  });
+  btn.addEventListener("click", () => {
+    chrome.runtime.sendMessage({ action: "openPopup" });
+  });
+
+  document.documentElement.appendChild(btn);
+  return btn;
 }
 
-function showHint() {
-  if (!isAiSite()) return;
-  clearTimeout(hideHintTimer);
-  if (!hintEl) hintEl = createHint();
-  // Force reflow so transition fires even on first show
-  hintEl.style.opacity = "0";
+function positionButton(el) {
+  if (!floatingBtn || !el) return;
+  const rect = el.getBoundingClientRect();
+  if (rect.width === 0 && rect.height === 0) return;
+
+  const centerY = rect.top + rect.height / 2 - BTN_SIZE / 2;
+  const leftOutside = rect.left - BTN_SIZE - BTN_GAP;
+
+  let left, top;
+  if (leftOutside >= 4) {
+    // Enough room to the left — sit beside the field, vertically centred
+    left = leftOutside;
+    top = Math.max(4, Math.min(centerY, window.innerHeight - BTN_SIZE - 4));
+  } else {
+    // Not enough room — sit inside the field at the top-left corner
+    left = rect.left + 6;
+    top = rect.top + 6;
+  }
+
+  floatingBtn.style.left = left + "px";
+  floatingBtn.style.top = top + "px";
+}
+
+function showButton(el) {
+  clearTimeout(hideTimer);
+  if (!floatingBtn) floatingBtn = createFloatingButton();
+  trackedEl = el;
+  positionButton(el);
+  floatingBtn.style.pointerEvents = "auto";
   requestAnimationFrame(() => {
-    hintEl.style.opacity = "1";
+    floatingBtn.style.opacity = "1";
+    floatingBtn.style.transform = "scale(1)";
   });
+  attachScrollListeners(el);
 }
 
-function hideHint(delay = 1800) {
-  clearTimeout(hideHintTimer);
-  hideHintTimer = setTimeout(() => {
-    if (hintEl) hintEl.style.opacity = "0";
-  }, delay);
+function hideButton(immediate = false) {
+  detachScrollListeners();
+  trackedEl = null;
+  if (!floatingBtn) return;
+  const doHide = () => {
+    if (floatingBtn) {
+      floatingBtn.style.opacity = "0";
+      floatingBtn.style.transform = "scale(0.85)";
+      floatingBtn.style.pointerEvents = "none";
+    }
+  };
+  if (immediate) {
+    doHide();
+  } else {
+    // Small delay so a click on the button registers before it disappears
+    hideTimer = setTimeout(doHide, 120);
+  }
+}
+
+// Reposition on scroll of any ancestor
+function onScroll() {
+  if (trackedEl) positionButton(trackedEl);
+}
+
+function getScrollParents(el) {
+  const parents = [window];
+  let node = el.parentElement;
+  while (node && node !== document.documentElement) {
+    const { overflow, overflowY } = getComputedStyle(node);
+    if (/auto|scroll/.test(overflow + overflowY)) parents.push(node);
+    node = node.parentElement;
+  }
+  return parents;
+}
+
+function attachScrollListeners(el) {
+  scrollParents = getScrollParents(el);
+  scrollParents.forEach((p) => p.addEventListener("scroll", onScroll, { passive: true }));
+  window.addEventListener("resize", onScroll, { passive: true });
+}
+
+function detachScrollListeners() {
+  scrollParents.forEach((p) => p.removeEventListener("scroll", onScroll));
+  window.removeEventListener("resize", onScroll);
+  scrollParents = [];
 }
 
 // --- Focus tracking ---
@@ -100,20 +191,20 @@ document.addEventListener("focusin", (e) => {
 
   if (isEditable) {
     lastFocusedInput = el;
-    // Only show hint for textarea / large contenteditable (likely prompt fields)
-    if (el.tagName === "TEXTAREA" || el.isContentEditable) {
-      showHint();
+    if (isAiSite() && (el.tagName === "TEXTAREA" || el.isContentEditable)) {
+      showButton(el);
     }
   }
 }, true);
 
-document.addEventListener("focusout", () => {
-  hideHint();
+document.addEventListener("focusout", (e) => {
+  // If focus moves to our button, don't hide (mousedown preventDefault handles this,
+  // but relatedTarget check is a belt-and-suspenders guard)
+  if (e.relatedTarget === floatingBtn) return;
+  hideButton();
 }, true);
 
 // --- Double-Ctrl detection ---
-// Two Ctrl keydowns within 300ms opens the extension popup.
-// Any non-Ctrl key between the two presses resets the counter.
 let lastCtrlTime = 0;
 document.addEventListener("keydown", (e) => {
   if (e.key === "Control") {
@@ -143,16 +234,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     lastFocusedInput.focus();
 
     if (lastFocusedInput.isContentEditable) {
-      // Works for rich text editors (Google Docs, Notion, etc.)
       document.execCommand("insertText", false, msg.json);
     } else {
-      // Works for <input> and <textarea>: insert at cursor, preserve selection
       const el = lastFocusedInput;
       const start = el.selectionStart ?? el.value.length;
       const end   = el.selectionEnd   ?? el.value.length;
       el.value = el.value.slice(0, start) + msg.json + el.value.slice(end);
       el.selectionStart = el.selectionEnd = start + msg.json.length;
-      // Fire input event so React/Vue/Angular detect the change
       el.dispatchEvent(new Event("input", { bubbles: true }));
     }
 
@@ -161,5 +249,5 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     sendResponse({ success: false, reason: err.message });
   }
 
-  return true; // keep message channel open for async sendResponse
+  return true;
 });
