@@ -16,7 +16,7 @@ chrome.runtime.onMessage.addListener((msg) => {
       url: chrome.runtime.getURL("popup.html"),
       type: "popup",
       width: 460,
-      height: 572, // 540px content + ~32px window chrome
+      height: 520, // 488px content + ~32px window chrome
       focused: true,
     });
   })();

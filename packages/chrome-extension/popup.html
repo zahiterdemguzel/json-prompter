@@ -13,12 +13,12 @@
     html, body {
       background: var(--bg);
       width: 460px;
-      height: 540px;
+      height: 488px;
     }
 
     #app {
       width: 460px;
-      height: 540px;
+      height: 488px;
       border-radius: 0;
       border: none;
     }
@@ -26,13 +26,6 @@
 </head>
 <body>
 <div id="app">
-  <div class="titlebar">
-    <h1><img class="logo-img" src="shared/resources/logo.png" alt="" />JSON Prompter</h1>
-    <div class="titlebar-actions">
-      <button id="closeBtn" title="Close (Esc)">✕</button>
-    </div>
-  </div>
-
   <div class="tabs">
     <button class="tab active" data-tab="builder">Builder</button>
     <button class="tab" data-tab="history">History</button>
@@ -72,12 +65,6 @@
 
 <!-- api.js sets window.api and must run before the ES modules below -->
 <script src="api.js"></script>
-
-<script>
-  // Close button: runs immediately (before module scripts which are deferred)
-  document.getElementById("closeBtn").addEventListener("click", () => window.api.hideWindow());
-</script>
-
 <script type="module" src="shared/js/app.js"></script>
 </body>
 </html>
