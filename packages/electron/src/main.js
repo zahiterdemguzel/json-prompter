@@ -74,39 +74,32 @@ function createWindow() {
 
 function toggleWindow() {
   if (!mainWindow) return;
-  if (mainWindow.isVisible()) {
-    mainWindow.hide();
+  if (mainWindow.isVisible()) { mainWindow.hide(); return; }
+
+  captureForegroundWindow();
+
+  const stored = store.get("windowBounds");
+  let targetX, targetY;
+
+  if (stored) {
+    // Clamp stored position to the nearest display's work area.
+    // Handles disconnected monitors — the window stays visible
+    // even if the display it was last on is no longer connected.
+    const display = screen.getDisplayNearestPoint({ x: stored.x, y: stored.y });
+    const { x, y, width, height } = display.workArea;
+    targetX = Math.max(x, Math.min(stored.x, x + width - WIN_W));
+    targetY = Math.max(y, Math.min(stored.y, y + height - WIN_H));
   } else {
-    captureForegroundWindow();
-    let targetX, targetY;
-
-    if (savedForegroundRect && process.platform === "win32") {
-      const { left, top, right } = savedForegroundRect;
-      const fgW = right - left;
-      targetX = Math.round(left + fgW / 2 - WIN_W / 2);
-      targetY = top - WIN_H - 8;
-
-      const display = screen.getDisplayNearestPoint({ x: Math.round(left + fgW / 2), y: top });
-      const { x: wa_x, y: wa_y, width: wa_w, height: wa_h } = display.workArea;
-      targetX = Math.max(wa_x, Math.min(targetX, wa_x + wa_w - WIN_W));
-      targetY = Math.max(wa_y, Math.min(targetY, wa_y + wa_h - WIN_H));
-    } else {
-      const stored = store.get("windowBounds");
-      if (stored) {
-        targetX = stored.x;
-        targetY = stored.y;
-      } else {
-        const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
-        targetX = Math.round(screenW / 2 - WIN_W / 2);
-        targetY = Math.round(screenH / 2 - WIN_H / 2);
-      }
-    }
-
-    mainWindow.setPosition(targetX, targetY);
-    mainWindow.show();
-    mainWindow.focus();
-    mainWindow.webContents.send("window-shown");
+    // First launch — center on the primary display
+    const { x, y, width, height } = screen.getPrimaryDisplay().workArea;
+    targetX = Math.round(x + width / 2 - WIN_W / 2);
+    targetY = Math.round(y + height / 2 - WIN_H / 2);
   }
+
+  mainWindow.setPosition(targetX, targetY);
+  mainWindow.show();
+  mainWindow.focus();
+  mainWindow.webContents.send("window-shown");
 }
 
 // ── Focus capture (Windows only) ──
