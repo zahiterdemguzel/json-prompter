@@ -3,35 +3,77 @@
 
 // Known generative AI sites — floating button is shown when a prompt field is focused.
 const AI_HOSTNAMES = [
-  "chat.openai.com", "chatgpt.com",
-  "claude.ai",
-  "gemini.google.com",
-  "perplexity.ai",
-  "poe.com",
-  "character.ai",
-  "copilot.microsoft.com",
-  "you.com",
-  "phind.com",
-  "grok.com",
-  "deepseek.com",
-  "chat.deepseek.com",
+  // OpenAI
+  "chat.openai.com", "chatgpt.com", "playground.openai.com",
+  // Anthropic
+  "claude.ai", "playground.anthropic.com",
+  // Google
+  "gemini.google.com", "aistudio.google.com", "notebooklm.google", "labs.google",
+  // Microsoft / Copilot
+  "copilot.microsoft.com", "bing.com", "designer.microsoft.com",
+  // Meta
   "meta.ai",
-  "groq.com",
+  // xAI
+  "grok.com", "x.com",
+  // Perplexity
+  "perplexity.ai", "labs.perplexity.ai",
+  // DeepSeek
+  "deepseek.com", "chat.deepseek.com",
+  // Mistral
   "chat.mistral.ai",
-  "huggingface.co",
-  "cohere.com",
-  "openrouter.ai",
-  "chat.lmsys.org",
-  "replicate.com",
-  "writesonic.com",
-  "jasper.ai",
-  "copy.ai",
-  "notion.so",
-  "playground.anthropic.com",
-  "aistudio.google.com",
-  "together.ai",
-  "labs.perplexity.ai",
-  "pi.ai",
+  // Groq
+  "groq.com",
+  // Multi-model / aggregators
+  "poe.com", "you.com", "openrouter.ai", "chat.lmsys.org", "lmarena.ai",
+  // Chatbots & assistants
+  "character.ai", "pi.ai", "phind.com",
+  "doubao.com", "kimi.com", "kimi.moonshot.cn",
+  "qwen.ai", "tongyi.aliyun.com",
+  "genspark.ai", "manus.im",
+  "monica.im", "blackbox.ai", "coze.com",
+  "hume.ai", "giga.chat", "quark.cn",
+  "minimax.io",
+  // Character / roleplay chat
+  "janitorai.com", "candy.ai", "talkie-ai.com",
+  "joyland.ai", "chub.ai", "moescape.ai",
+  // AI Writing assistants
+  "writesonic.com", "jasper.ai", "copy.ai", "rytr.me",
+  "quillbot.com", "grammarly.com",
+  "sudowrite.com", "novelai.net",
+  "writer.com", "frase.io", "gamma.app",
+  // Productivity / notes / workspace
+  "notion.so", "mem.ai", "taskade.com",
+  // Presentations
+  "beautiful.ai", "pitch.com", "slidesai.io",
+  // Translation / research
+  "deepl.com", "consensus.app", "elicit.com", "scite.ai", "exa.ai",
+  // AI Coding assistants
+  "cursor.com", "replit.com", "lovable.dev",
+  "bolt.new", "v0.dev", "windsurf.com",
+  "github.com", "cognition.ai", "dify.ai",
+  // Hugging Face & ML platforms
+  "huggingface.co", "replicate.com", "together.ai", "cohere.com",
+  // AI Image generators (text prompt input)
+  "midjourney.com", "firefly.adobe.com", "express.adobe.com",
+  "ideogram.ai", "leonardo.ai", "playgroundai.com",
+  "nightcafe.studio", "civitai.com", "reve.art", "seaart.ai",
+  "canva.com", "freepik.com", "picsart.com",
+  "krea.ai", "recraft.ai", "artbreeder.com",
+  "dreamstudio.ai", "stability.ai", "pixai.art",
+  "imagine.art", "clipdrop.co", "deepai.org",
+  "photoroom.com", "dreamina.com",
+  // AI Video generators (text prompt input)
+  "runwayml.com", "pika.art", "lumalabs.ai",
+  "klingai.com", "hailuoai.com", "higgsfield.ai",
+  "pixverse.ai", "haiper.ai", "vidu.com",
+  "wan.video", "synthesia.io", "heygen.com",
+  "invideo.io", "descript.com", "pictory.ai",
+  "veed.io", "capcut.com", "opus.pro",
+  // AI Audio / Music
+  "suno.com", "udio.com", "elevenlabs.io",
+  "soundraw.io", "aiva.ai", "mureka.ai",
+  // AI meeting & transcription (text input for search/notes)
+  "otter.ai", "fireflies.ai", "tldv.io",
 ];
 
 function isAiSite() {
