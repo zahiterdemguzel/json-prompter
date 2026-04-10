@@ -71,6 +71,36 @@ window.api = {
     });
   },
 
+  async getSetting(key) {
+    const defaults = { theme: "auto", prettyJson: true };
+    return new Promise(resolve => {
+      chrome.storage.local.get("json-prompter-setting-" + key, result => {
+        const val = result["json-prompter-setting-" + key];
+        resolve(val !== undefined ? val : (key in defaults ? defaults[key] : null));
+      });
+    });
+  },
+
+  async setSetting(key, val) {
+    return new Promise(resolve => {
+      chrome.storage.local.set({ ["json-prompter-setting-" + key]: val }, resolve);
+    });
+  },
+
+  async getTemplates() {
+    return new Promise(resolve => {
+      chrome.storage.local.get("json-prompter-templates", result => {
+        resolve(result["json-prompter-templates"] || []);
+      });
+    });
+  },
+
+  async setTemplates(templates) {
+    return new Promise(resolve => {
+      chrome.storage.local.set({ "json-prompter-templates": templates }, resolve);
+    });
+  },
+
   // In a popup, the page loads fresh every time it opens — DOMContentLoaded is the equivalent
   onWindowShown(cb) {
     if (document.readyState === "loading") {
