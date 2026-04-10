@@ -1,20 +1,24 @@
 import { setRows } from "./state.js";
 import { render } from "./renderer.js";
-import { escHtml, timeAgo, showToast } from "./utils.js";
+import { escHtml, timeAgo, showToast, switchToTab, detectType } from "./utils.js";
 
-// Fetches history from the platform and renders it into the history panel
-export async function loadHistory() {
-  const list = document.getElementById("historyList");
-  const history = await window.api.getHistory();
+let searchBound = false;
 
-  if (!history.length) {
+function renderHistory(list, history, query) {
+  // Pair each entry with its original index before filtering so click handlers
+  // can reference the correct position in the full history array.
+  const filtered = history
+    .map((h, i) => ({ h, i }))
+    .filter(({ h }) => !query || h.json.toLowerCase().includes(query));
+
+  if (!filtered.length) {
     list.innerHTML = '<div class="history-empty">No history yet</div>';
     return;
   }
 
-  list.innerHTML = history
+  list.innerHTML = filtered
     .map(
-      (h, i) => `
+      ({ h, i }) => `
       <div class="history-item" data-idx="${i}">
         <div class="history-json">${escHtml(h.json)}</div>
         <div class="history-time">${timeAgo(h.timestamp)}</div>
@@ -22,13 +26,26 @@ export async function loadHistory() {
     )
     .join("");
 
-  // Attach click handlers after rendering
   list.querySelectorAll(".history-item").forEach((el) => {
     el.addEventListener("click", () => loadFromHistory(Number(el.dataset.idx)));
   });
 }
 
-// Parses a history entry back into rows and switches to the Builder tab
+export async function loadHistory() {
+  const list = document.getElementById("historyList");
+  const searchEl = document.getElementById("historySearch");
+
+  if (searchEl && !searchBound) {
+    searchBound = true;
+    searchEl.addEventListener("input", () => loadHistory());
+  }
+
+  const query = searchEl?.value.toLowerCase() ?? "";
+  const history = await window.api.getHistory();
+
+  renderHistory(list, history, query);
+}
+
 function loadFromHistory(idx) {
   window.api.getHistory().then((history) => {
     if (!history[idx]) return;
@@ -37,18 +54,11 @@ function loadFromHistory(idx) {
       const newRows = Object.entries(obj).map(([key, value]) => ({
         key,
         value: value === null ? "" : String(value),
-        type:
-          value === null        ? "null" :
-          typeof value === "boolean" ? "bool" :
-          typeof value === "number"  ? "num"  : "str",
+        type: detectType(value === null ? "null" : String(value)),
       }));
       setRows(newRows.length ? newRows : [{ key: "", value: "", type: "str" }]);
 
-      // Switch to Builder tab
-      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-      document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
-      document.querySelector('[data-tab="builder"]').classList.add("active");
-      document.querySelector('[data-panel="builder"]').classList.add("active");
+      switchToTab("builder");
 
       render();
     } catch (e) {

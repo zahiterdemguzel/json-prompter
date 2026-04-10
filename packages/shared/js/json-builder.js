@@ -1,6 +1,7 @@
 import { rows } from "./state.js";
+import { getSetting } from "./settings.js";
 
-// Converts the current rows into a typed JSON object and returns it pretty-printed
+// Converts the current rows into a typed JSON object and serializes it
 export function buildJson() {
   const obj = {};
   rows.forEach((r) => {
@@ -13,7 +14,8 @@ export function buildJson() {
       case "null": obj[k] = null; break;
     }
   });
-  return JSON.stringify(obj, null, 2);
+  const pretty = getSetting("prettyJson") !== false; // default true
+  return JSON.stringify(obj, null, pretty ? 2 : 0);
 }
 
 // No-op — preview strip has been removed
