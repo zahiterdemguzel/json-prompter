@@ -16,9 +16,5 @@ export function buildJson() {
   return JSON.stringify(obj, null, 2);
 }
 
-// Updates the preview strip with a truncated version of the current JSON
-export function updatePreview() {
-  const json = buildJson();
-  document.getElementById("preview").textContent =
-    json.length > 120 ? json.slice(0, 120) + "…" : json;
-}
+// No-op — preview strip has been removed
+export function updatePreview() {}

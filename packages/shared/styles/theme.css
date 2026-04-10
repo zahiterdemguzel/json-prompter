@@ -185,6 +185,8 @@ html, body {
   align-items: center;
   gap: 6px;
   animation: slideIn 0.15s ease-out;
+  min-width: 0;
+  width: 100%;
 }
 
 @keyframes slideIn {
@@ -213,8 +215,8 @@ html, body {
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-.kv-row input.key-input { flex: 0.8; }
-.kv-row input.val-input { flex: 1.2; }
+.kv-row input.key-input { flex: 1; min-width: 0; }
+.kv-row input.val-input { flex: 3; min-width: 0; }
 
 .kv-sep {
   color: var(--text-muted);

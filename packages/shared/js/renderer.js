@@ -36,19 +36,6 @@ export function render() {
     });
     valInput.addEventListener("keydown", (e) => handleKeyNav(e, i, "val"));
 
-    const badge = document.createElement("span");
-    badge.className = `type-badge ${row.type}`;
-    badge.textContent = row.type;
-    badge.title = "Click to cycle type";
-    badge.addEventListener("click", () => {
-      const idx = TYPES.indexOf(rows[i].type);
-      rows[i].type = TYPES[(idx + 1) % TYPES.length];
-      if (rows[i].type === "null") rows[i].value = "";
-      if (rows[i].type === "bool" && !["true", "false"].includes(rows[i].value)) rows[i].value = "true";
-      render();
-      updatePreview();
-    });
-
     const removeBtn = document.createElement("button");
     removeBtn.className = "remove-btn";
     removeBtn.textContent = "×";
@@ -60,7 +47,7 @@ export function render() {
       }
     });
 
-    div.append(keyInput, sep, valInput, badge, removeBtn);
+    div.append(keyInput, sep, valInput, removeBtn);
     container.appendChild(div);
   });
 
