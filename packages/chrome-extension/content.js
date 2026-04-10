@@ -49,6 +49,7 @@ let rafId = null;
 const BTN_SIZE = 28;
 const BTN_GAP = 6;
 const PLACEMENT_KEY = "json-prompter-btn-placement";
+const DOUBLE_CTRL_KEY = "json-prompter-double-ctrl";
 let btnPlacement = "top-left";
 
 chrome.storage.local.get(PLACEMENT_KEY, (result) => {
@@ -56,7 +57,8 @@ chrome.storage.local.get(PLACEMENT_KEY, (result) => {
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes[PLACEMENT_KEY]) {
+  if (area !== "local") return;
+  if (changes[PLACEMENT_KEY]) {
     btnPlacement = changes[PLACEMENT_KEY].newValue;
     if (trackedEl) positionButton(trackedEl);
   }
@@ -213,8 +215,13 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Control") {
     const now = Date.now();
     if (now - lastCtrlTime < 300) {
-      chrome.runtime.sendMessage({ action: "openPopup" });
       lastCtrlTime = 0;
+      // Read the setting fresh each time — avoids caching/race issues
+      chrome.storage.local.get(DOUBLE_CTRL_KEY, (result) => {
+        if (result[DOUBLE_CTRL_KEY]) {
+          chrome.runtime.sendMessage({ action: "openPopup" });
+        }
+      });
     } else {
       lastCtrlTime = now;
     }

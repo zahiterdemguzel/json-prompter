@@ -62,7 +62,13 @@ window.api = {
   },
 
   hideWindow() {
-    window.close();
+    chrome.windows.getCurrent(win => {
+      if (win && win.type === "popup") {
+        chrome.windows.remove(win.id);
+      } else {
+        window.close();
+      }
+    });
   },
 
   // In a popup, the page loads fresh every time it opens — DOMContentLoaded is the equivalent

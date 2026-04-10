@@ -1,4 +1,5 @@
 const PLACEMENT_KEY = "json-prompter-btn-placement";
+const DOUBLE_CTRL_KEY = "json-prompter-double-ctrl";
 
 const PLACEMENTS = {
   "0,0": { id: "top-left",     label: "Top-left corner" },
@@ -45,6 +46,12 @@ function select(id) {
   chrome.storage.local.set({ [PLACEMENT_KEY]: id });
 }
 
-chrome.storage.local.get(PLACEMENT_KEY, (result) => {
+const doubleCtrlToggle = document.getElementById("doubleCtrlToggle");
+doubleCtrlToggle.addEventListener("change", () => {
+  chrome.storage.local.set({ [DOUBLE_CTRL_KEY]: doubleCtrlToggle.checked });
+});
+
+chrome.storage.local.get([PLACEMENT_KEY, DOUBLE_CTRL_KEY], (result) => {
   select(result[PLACEMENT_KEY] || "top-left");
+  doubleCtrlToggle.checked = result[DOUBLE_CTRL_KEY] === true;
 });

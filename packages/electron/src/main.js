@@ -18,7 +18,7 @@ const { uIOhook, UiohookKey } = require("uiohook-napi");
 
 const store = new Store({
   name: "json-prompter-data",
-  defaults: { history: [] },
+  defaults: { history: [], doubleCtrlEnabled: true },
 });
 
 let mainWindow = null;
@@ -112,6 +112,7 @@ function registerHotkeys() {
 
   // Double-tap Ctrl detection via global keyboard hook
   uIOhook.on("keydown", (e) => {
+    if (!store.get("doubleCtrlEnabled")) return;
     const isCtrl = e.keycode === UiohookKey.Ctrl || e.keycode === UiohookKey.CtrlRight;
     if (!isCtrl) return;
     const now = Date.now();
@@ -179,6 +180,13 @@ ipcMain.handle("clear-history", () => {
 
 ipcMain.handle("hide-window", () => {
   mainWindow.hide();
+  return true;
+});
+
+ipcMain.handle("get-double-ctrl", () => store.get("doubleCtrlEnabled"));
+
+ipcMain.handle("set-double-ctrl", (_event, enabled) => {
+  store.set("doubleCtrlEnabled", !!enabled);
   return true;
 });
 
