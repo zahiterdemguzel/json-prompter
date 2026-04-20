@@ -1,6 +1,15 @@
-import { rows, TYPES } from "./state.js";
+import { rows, TYPES, pushSnapshot } from "./state.js";
 import { updatePreview, buildJson } from "./json-builder.js";
-import { showToast } from "./utils.js"; // used by handleCopy
+import { showToast, detectType } from "./utils.js";
+import { attachAutocomplete } from "./autocomplete.js";
+
+// Syncs badge and valInput to a given type — used by both auto-detect and manual cycle
+function applyType(type, badge, input) {
+  badge.className = `type-badge ${type}`;
+  badge.textContent = type;
+  input.disabled = type === "null";
+  input.placeholder = type === "bool" ? "true / false" : type === "null" ? "(null)" : "value";
+}
 
 // Rebuilds the entire rows UI from the current state
 export function render() {
@@ -20,34 +29,48 @@ export function render() {
       updatePreview();
     });
     keyInput.addEventListener("keydown", (e) => handleKeyNav(e, i, "key"));
+    attachAutocomplete(keyInput);
 
     const sep = document.createElement("span");
     sep.className = "kv-sep";
     sep.textContent = "→";
 
+    const typeBadge = document.createElement("span");
+
     const valInput = document.createElement("input");
     valInput.className = "val-input";
-    valInput.placeholder = row.type === "bool" ? "true / false" : row.type === "null" ? "(null)" : "value";
     valInput.value = row.value;
-    valInput.disabled = row.type === "null";
     valInput.addEventListener("input", (e) => {
       rows[i].value = e.target.value;
+      const detected = detectType(e.target.value);
+      if (detected !== rows[i].type) {
+        rows[i].type = detected;
+        applyType(detected, typeBadge, valInput);
+      }
       updatePreview();
     });
     valInput.addEventListener("keydown", (e) => handleKeyNav(e, i, "val"));
+
+    applyType(row.type, typeBadge, valInput);
+    typeBadge.addEventListener("click", () => {
+      const currentIdx = TYPES.indexOf(rows[i].type);
+      rows[i].type = TYPES[(currentIdx + 1) % TYPES.length];
+      applyType(rows[i].type, typeBadge, valInput);
+      updatePreview();
+    });
 
     const removeBtn = document.createElement("button");
     removeBtn.className = "remove-btn";
     removeBtn.textContent = "×";
     removeBtn.addEventListener("click", () => {
       if (rows.length > 1) {
+        pushSnapshot();
         rows.splice(i, 1);
         render();
-        updatePreview();
       }
     });
 
-    div.append(keyInput, sep, valInput, removeBtn);
+    div.append(keyInput, sep, valInput, typeBadge, removeBtn);
     container.appendChild(div);
   });
 
@@ -56,6 +79,7 @@ export function render() {
 
 // Adds a new empty row and focuses its key input
 export function addRow() {
+  pushSnapshot();
   rows.push({ key: "", value: "", type: "str" });
   render();
   setTimeout(() => {
@@ -83,13 +107,15 @@ export function handleKeyNav(e, rowIndex, field) {
     window.api.hideWindow();
   }
 
-  // Arrow keys → move focus between rows
+  // Arrow keys → move focus between rows (skip if autocomplete is handling it)
   if (e.key === "ArrowDown" && rowIndex < rows.length - 1) {
+    if (field === "key" && document.activeElement._autocompleteOpen?.()) return;
     e.preventDefault();
     const sel = field === "key" ? ".key-input" : ".val-input";
     document.querySelectorAll(sel)[rowIndex + 1]?.focus();
   }
   if (e.key === "ArrowUp" && rowIndex > 0) {
+    if (field === "key" && document.activeElement._autocompleteOpen?.()) return;
     e.preventDefault();
     const sel = field === "key" ? ".key-input" : ".val-input";
     document.querySelectorAll(sel)[rowIndex - 1]?.focus();
@@ -99,6 +125,7 @@ export function handleKeyNav(e, rowIndex, field) {
   if (e.key === "Backspace" && rows[rowIndex].key === "" && rows[rowIndex].value === "" && rows.length > 1) {
     if (field === "key") {
       e.preventDefault();
+      pushSnapshot();
       rows.splice(rowIndex, 1);
       render();
       const prevIdx = Math.max(0, rowIndex - 1);

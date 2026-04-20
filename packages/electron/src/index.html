@@ -22,8 +22,12 @@
       animation: popIn 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
+    html.theme-light #app {
+      box-shadow: 0 12px 48px rgba(0,0,0,0.18), 0 0 0 1px var(--border);
+    }
+
     @media (prefers-color-scheme: light) {
-      #app {
+      html:not(.theme-dark):not(.theme-light) #app {
         box-shadow: 0 12px 48px rgba(0,0,0,0.18), 0 0 0 1px var(--border);
       }
     }
@@ -140,6 +144,7 @@
   <div class="tabs">
     <button class="tab active" data-tab="builder">Builder</button>
     <button class="tab" data-tab="history">History</button>
+    <button class="tab" data-tab="templates">Templates</button>
     <button class="tab" data-tab="settings">Settings</button>
   </div>
 
@@ -155,6 +160,9 @@
         <button class="action-btn" id="copyBtn">
           <span class="icon">⎘</span> Copy
         </button>
+        <button class="action-btn" id="saveTemplateBtn">
+          <span class="icon">☆</span> Save Template
+        </button>
         <button class="action-btn primary" id="pasteBtn">
           <span class="icon">⎋</span> Paste &amp; Close
         </button>
@@ -162,10 +170,17 @@
     </div>
 
     <div class="panel" data-panel="history">
+      <div class="history-search-wrap">
+        <input id="historySearch" type="search" placeholder="Search history…" autocomplete="off" />
+      </div>
       <div class="history-list" id="historyList"></div>
       <div class="history-actions">
         <button class="action-btn" id="clearHistoryBtn" style="width:100%">Clear History</button>
       </div>
+    </div>
+
+    <div class="panel" data-panel="templates">
+      <div class="history-list" id="templateList"></div>
     </div>
 
     <div class="panel" data-panel="settings">
@@ -180,6 +195,27 @@
             <span class="toggle-track"></span>
           </label>
         </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Theme</div>
+            <div class="settings-row-desc">Choose light, dark, or follow system preference</div>
+          </div>
+          <select id="themeSelect" style="background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 8px;font-size:12px;cursor:pointer;">
+            <option value="auto">Auto</option>
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">Pretty JSON output</div>
+            <div class="settings-row-desc">Format JSON with indentation (uncheck for minified)</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="prettyToggle" checked />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -191,10 +227,20 @@
   // Close button uses window.api directly since app.js is a module (deferred)
   document.getElementById("closeBtn").addEventListener("click", () => window.api.hideWindow());
 
-  // Settings: double-ctrl toggle
   const toggle = document.getElementById("doubleCtrlToggle");
   window.api.getDoubleCtrl().then(enabled => { toggle.checked = !!enabled; });
   toggle.addEventListener("change", () => window.api.setDoubleCtrl(toggle.checked));
+
+  const themeSelect = document.getElementById("themeSelect");
+  window.api.getSetting("theme").then(v => { themeSelect.value = v || "auto"; });
+  themeSelect.addEventListener("change", () => {
+    window.api.setSetting("theme", themeSelect.value);
+    document.documentElement.className = "theme-" + themeSelect.value;
+  });
+
+  const prettyToggle = document.getElementById("prettyToggle");
+  window.api.getSetting("prettyJson").then(v => { prettyToggle.checked = v !== false; });
+  prettyToggle.addEventListener("change", () => window.api.setSetting("prettyJson", prettyToggle.checked));
 </script>
 <script type="module" src="../shared/js/app.js"></script>
 </body>

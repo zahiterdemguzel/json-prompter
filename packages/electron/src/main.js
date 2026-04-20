@@ -18,28 +18,34 @@ const { uIOhook, UiohookKey } = require("uiohook-napi");
 
 const store = new Store({
   name: "json-prompter-data",
-  defaults: { history: [], doubleCtrlEnabled: true },
+  defaults: { history: [], doubleCtrlEnabled: true, templates: [], windowBounds: null },
 });
+
+function getSettingDefault(key) {
+  const defaults = { theme: "auto", prettyJson: true };
+  return key in defaults ? defaults[key] : null;
+}
+
+const WIN_W = 520;
+const WIN_H = 580;
 
 let mainWindow = null;
 let tray = null;
 let lastCtrlTime = 0;
 const DOUBLE_TAP_THRESHOLD = 350; // ms between two Ctrl presses to count as a double-tap
 let savedHwnd = null; // HWND of the window that had focus before we appeared
+let savedForegroundRect = null;
 
 // ── Window ──
 
 function createWindow() {
-  const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
   const logoPath = app.isPackaged
     ? path.join(__dirname, "../shared/resources/logo.png")
     : path.join(__dirname, "../../shared/resources/logo.png");
 
   mainWindow = new BrowserWindow({
-    width: 520,
-    height: 580,
-    x: Math.round(screenW / 2 - 260),
-    y: Math.round(screenH / 2 - 290),
+    width: WIN_W,
+    height: WIN_H,
     frame: false,
     transparent: true,
     resizable: false,
@@ -59,20 +65,41 @@ function createWindow() {
   mainWindow.on("blur", () => {
     if (mainWindow?.isVisible()) mainWindow.hide();
   });
+
+  mainWindow.on("moved", () => {
+    const [x, y] = mainWindow.getPosition();
+    store.set("windowBounds", { x, y });
+  });
 }
 
 function toggleWindow() {
   if (!mainWindow) return;
-  if (mainWindow.isVisible()) {
-    mainWindow.hide();
+  if (mainWindow.isVisible()) { mainWindow.hide(); return; }
+
+  captureForegroundWindow();
+
+  const stored = store.get("windowBounds");
+  let targetX, targetY;
+
+  if (stored) {
+    // Clamp stored position to the nearest display's work area.
+    // Handles disconnected monitors — the window stays visible
+    // even if the display it was last on is no longer connected.
+    const display = screen.getDisplayNearestPoint({ x: stored.x, y: stored.y });
+    const { x, y, width, height } = display.workArea;
+    targetX = Math.max(x, Math.min(stored.x, x + width - WIN_W));
+    targetY = Math.max(y, Math.min(stored.y, y + height - WIN_H));
   } else {
-    captureForegroundWindow();
-    const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
-    mainWindow.setPosition(Math.round(screenW / 2 - 260), Math.round(screenH / 2 - 290));
-    mainWindow.show();
-    mainWindow.focus();
-    mainWindow.webContents.send("window-shown");
+    // First launch — center on the primary display
+    const { x, y, width, height } = screen.getPrimaryDisplay().workArea;
+    targetX = Math.round(x + width / 2 - WIN_W / 2);
+    targetY = Math.round(y + height / 2 - WIN_H / 2);
   }
+
+  mainWindow.setPosition(targetX, targetY);
+  mainWindow.show();
+  mainWindow.focus();
+  mainWindow.webContents.send("window-shown");
 }
 
 // ── Focus capture (Windows only) ──
@@ -85,12 +112,20 @@ function captureForegroundWindow() {
       'Add-Type @"',
       "using System;",
       "using System.Runtime.InteropServices;",
-      "public class _WinUtil {",
-      '    [DllImport("user32.dll")]',
-      "    public static extern IntPtr GetForegroundWindow();",
+      "public class _WinUtil2 {",
+      '    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();',
+      '    [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out RECT r);',
+      "    public struct RECT { public int Left, Top, Right, Bottom; }",
       "}",
       '"@',
-      "[_WinUtil]::GetForegroundWindow()",
+      "$hwnd = [_WinUtil2]::GetForegroundWindow()",
+      "$rect = New-Object _WinUtil2+RECT",
+      "[_WinUtil2]::GetWindowRect($hwnd, [ref]$rect) | Out-Null",
+      "Write-Output $hwnd",
+      "Write-Output $rect.Left",
+      "Write-Output $rect.Top",
+      "Write-Output $rect.Right",
+      "Write-Output $rect.Bottom",
     ].join("\n");
     const tmp = path.join(os.tmpdir(), "jp_get_hwnd.ps1");
     fs.writeFileSync(tmp, script);
@@ -98,9 +133,21 @@ function captureForegroundWindow() {
       encoding: "utf8",
       timeout: 1000,
     });
-    savedHwnd = result.trim();
+    const lines = result.trim().split(/\r?\n/);
+    savedHwnd = lines[0]?.trim() || null;
+    if (lines.length >= 5) {
+      savedForegroundRect = {
+        left: parseInt(lines[1], 10),
+        top: parseInt(lines[2], 10),
+        right: parseInt(lines[3], 10),
+        bottom: parseInt(lines[4], 10),
+      };
+    } else {
+      savedForegroundRect = null;
+    }
   } catch {
     savedHwnd = null;
+    savedForegroundRect = null;
   }
 }
 
@@ -189,6 +236,16 @@ ipcMain.handle("set-double-ctrl", (_event, enabled) => {
   store.set("doubleCtrlEnabled", !!enabled);
   return true;
 });
+
+ipcMain.handle("get-setting", (_e, key) => store.get(`setting_${key}`, getSettingDefault(key)));
+
+ipcMain.handle("set-setting", (_e, key, val) => {
+  store.set(`setting_${key}`, val);
+  return true;
+});
+
+ipcMain.handle("get-templates", () => store.get("templates") || []);
+ipcMain.handle("set-templates", (_event, templates) => { store.set("templates", templates); return true; });
 
 // ── Helpers ──
 

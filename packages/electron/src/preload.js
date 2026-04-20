@@ -11,5 +11,9 @@ contextBridge.exposeInMainWorld("api", {
   onWindowShown:   (cb)   => ipcRenderer.on("window-shown", cb),
   getDoubleCtrl:   ()     => ipcRenderer.invoke("get-double-ctrl"),
   setDoubleCtrl:   (v)    => ipcRenderer.invoke("set-double-ctrl", v),
+  getSetting:      (key)  => ipcRenderer.invoke("get-setting", key),
+  setSetting:      (key, val) => ipcRenderer.invoke("set-setting", key, val),
+  getTemplates:    ()     => ipcRenderer.invoke("get-templates"),
+  setTemplates:    (t)    => ipcRenderer.invoke("set-templates", t),
   isExtension: false,
 });
